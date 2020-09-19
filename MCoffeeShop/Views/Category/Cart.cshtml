@@ -1,0 +1,132 @@
+﻿@model IEnumerable<MCoffeeShop.Models.CartModel>
+@{
+    ViewBag.Title = "Cart";
+    double TotalAmount = 0;
+}
+
+<h2>Your Cart</h2>
+
+@using (Html.BeginForm("AddOrder", "Category", FormMethod.Post))
+{
+    <table class="table-condensed" style="width:100%">
+        <tr>
+            <td></td>
+            <td style="text-align:right">
+                <h4><label>Name</label></h4>
+            </td>
+            <td style="text-align:right">
+                <h4><label>Type</label></h4>
+            </td>
+            <td style="text-align:right">
+                <h4><label>Quantity</label></h4>
+            </td>
+            <td style="text-align:right">
+                <h4><label>UnitPrice</label></h4>
+            </td>
+            <td style="text-align:right">
+                <h4><label>TotalPrice</label></h4>
+            </td>
+        </tr>
+        @foreach (var item in Model)
+        {
+            TotalAmount += item.Total;
+            <tr>
+                <td style="text-align:right">
+                    <img src="~/images/@item.ImagePath" height="100px" width="100px" class="img-rounded" alt="..." />
+                </td>
+                <td style="text-align:right">
+                    @item.ProductName
+                </td>
+                <td style="text-align:right">
+                    @item.Type
+                </td>
+                <td style="text-align:right">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="SubToCart(@item.ProductID)">&laquo;</button>
+                    @item.Quantity.ToString(format: "#,##0")
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="AddToCart(@item.ProductID)">&raquo;</button>
+                </td>
+                <td style="text-align:right">
+                    @item.Price.ToString(format: "#,##0")
+                </td>
+                <td style="text-align:right">
+                    @item.Total.ToString(format: "#,##0")
+                </td>
+            </tr>
+        }
+        <tr style="border-top: 2px solid">
+            <td colspan="5" style="text-align:right">
+                <h3>Total Amount</h3>
+            </td>
+            <td style="text-align:right">
+                <h3>@TotalAmount.ToString(format: "#,##0")</h3>
+            </td>
+        </tr>
+
+        <tr style="text-align:right">
+            <td colspan="6">
+                <input type="submit" value="Save" name="Save" class="btn btn-primary" id="SaveOrder" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="button" value="Back to list" class="btn btn-secondary" onclick="location.href= 'Index'" />
+            </td>
+        </tr>
+    </table>
+}
+
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#SaveOrder").click(function () {
+            alert("SAVE SUCCESS")
+        });
+    });
+    function AddToCart(id) {
+        var formData = {
+            ProductID: id
+        }
+        $.ajax({
+            url: '/Category/AddToCart/' + id,
+            type: 'POST',
+            dataType: 'json',
+            data: formData,
+            success: function (data) {
+                if (data.Success) {
+                    $("#cartItem").text("Cart(" + data.Counter + ")");
+                    location.reload(true);
+                }
+            },
+            error: function (err) {
+                alert("Error:" + err.responseText);
+            }
+        });
+    }
+    function SubToCart(id) {
+        var formData = {
+            ProductID: id
+        }
+        $.ajax({
+            url: '/Category/SubToCart/' + id,
+            type: 'POST',
+            dataType: 'json',
+            data: formData,
+            success: function (data) {
+                if (data.Success) {
+                    if (data.Counter != 0) {
+                        $("#cartItem").text("Cart(" + data.Counter + ")");
+                        location.reload(true);
+                    }
+                    else if (data.Counter == 0) {
+                        location.replace("Index");
+                    }
+                }
+            },
+            error: function (err) {
+                alert("Error:" + err.responseText);
+            }
+        });
+    }
+</script>
+

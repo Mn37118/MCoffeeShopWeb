@@ -1,0 +1,385 @@
+﻿@{
+    ViewBag.Title = "Category";
+}
+
+<nav aria-label="breadcrumb">
+    <div class="breadcrumb tab-content">
+        <div class="breadcrumb-item">@Html.ActionLink("Home", "Index", "Home")</div>
+        <div class="breadcrumb-item active tab-pane fade show" aria-current="page" id="list-drink" role="tabpanel" aria-labelledby="list-drink-list">Drinks</div>
+        <div class="breadcrumb-item tab-pane fade" aria-current="page" id="list-dinning-offer" role="tabpanel" aria-labelledby="list-dinning-offer-list">Dinning offers</div>
+        <div class="breadcrumb-item tab-pane fade" aria-current="page" id="list-bakery" role="tabpanel" aria-labelledby="list-bakery-list">Bakery</div>
+    </div>
+</nav>
+
+<div class="row">
+    <div class="col-5 text-center">
+        <div class="list-group list-group-horizontal" id="list-tab" role="tablist">
+            <a class="list-group-item list-group-item-action active" id="list-drink-list" data-toggle="list" href="#list-drink" role="tab" aria-controls="drink">Drinks</a>
+            <a class="list-group-item list-group-item-action " id="list-dinning-offer-list" data-toggle="list" href="#list-dinning-offer" role="tab" aria-controls="dinning-offer">Dinning offers</a>
+            <a class="list-group-item list-group-item-action " id="list-bakery-list" data-toggle="list" href="#list-bakery" role="tab" aria-controls="bakery">Bakery</a>
+        </div>
+    </div>
+</div>
+
+<div>&nbsp;</div>
+
+<div class="row row-cols-1 row-cols-md-3">
+    <div class="col mb-4">
+        <form class="form-inline my-2 my-lg-0">
+            <input class="form-control mr-sm-2" type="text" placeholder="Enter name here" aria-label="Search" id="Search">
+        </form>
+    </div>
+    <div class="col mb-4">
+        <div>
+            &nbsp;
+        </div>
+    </div>
+    <div class="col mb-4">
+        <div class="text-right">
+            <p><button type="button" id="btnCreateNew" data-toggle="modal" data-target="#CreateEditModal" class="btn btn-outline-warning">ADD NEW</button></p>
+        </div>
+    </div>
+</div>
+
+@section DRINKS{
+    <div class="drink row row-cols-1 row-cols-md-4">
+
+    </div>
+}
+
+@section DINNING_OFFERS{
+    <div class="dinning-offer row row-cols-1 row-cols-md-4">
+
+    </div>
+}
+
+@section BAKERY{
+    <div class="bakery row row-cols-1 row-cols-md-4">
+
+    </div>
+}
+
+@section Script{
+    <script type="text/javascript">
+        var isUpdatable = false;
+        var currentUpdatePath = "";
+        var currentId = 0;
+
+        $(document).ready(function () {
+            showProducts();
+
+            $(".bakery").hide();
+            $(".dinning-offer").hide();
+            $(".hidden").hide(); //Hide Button submit Image
+
+            $("#list-drink-list").click(function () {
+                $(".bakery").show();
+                $(".drink").show();
+                $(".dinning-offer").show();
+                $(".bakery").hide();
+                $(".dinning-offer").hide();
+                $("#Category").val("DRINK");
+            });
+            $("#list-bakery-list").click(function () {
+                $(".bakery").show();
+                $(".drink").show();
+                $(".dinning-offer").show();
+                $(".drink").hide();
+                $(".dinning-offer").hide();
+                $("#Category").val("BAKERY");
+            });
+            $("#list-dinning-offer-list").click(function () {
+                $(".bakery").show();
+                $(".drink").show();
+                $(".dinning-offer").show();
+                $(".bakery").hide();
+                $(".drink").hide();
+                $("#Category").val("DINNING OFFER");
+            });
+
+            function Contains(text_one, text_two) {
+                if (text_one.indexOf(text_two) != -1) {
+                    return true;
+                }
+            }
+            $("#Search").keyup(function () {
+                var searchText = $("#Search").val().toLowerCase();
+                $(".Search").each(function () {
+                    if (!Contains($(this).text().toLowerCase(), searchText)) {
+                        $(this).hide();
+                    }
+                    else {
+                        $(this).show();
+                    }
+                });
+            });
+
+            $("#btnCreateNew").click(function (e) {
+                clearModalContent();
+                $(".disappear").hide();
+                isUpdatable = false;
+                $("#title").text("Add New");
+            });
+
+            $("#btnSave").click(function (e) {
+                var data = {
+                    ProductID: $("#ProductID").val(),
+                    ProductName: $("#ProductName").val(),
+                    Price: $("#Price").val(),
+                    DateAdd: $("#DateAdd").val(),
+                    ImagePath: $("#ImagePath").val(),
+                    Status: $("#ProductStatus").val(),
+                    Type: $("#Category").val().toLowerCase()
+                }
+                if (!isUpdatable) {
+                    if (!data.ImagePath || !data.ProductName || !data.Price) {
+                        alert("You should input ProductName , Price and choose ImagePath");
+                        return;
+                    }
+                }
+                else {
+                    if (!data.ImagePath) {
+                        data.ImagePath = currentUpdatePath;
+                    }
+                    data.ProductID = currentId;
+                }
+
+                alert(data.ImagePath);
+                $("#UploadForm").submit();
+
+                if (!isUpdatable) {
+                    $.ajax({
+                        url: '/Category/Create/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            alert("ADD NEW SUCCESS");
+                            showProducts();
+                        },
+                        error: function (err) {
+                            alert("Error:" + err.responseText);
+                        }
+                    });
+                }
+                else {
+                    $.ajax({
+                        url: '/Category/Update/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            alert("UPDATE SUCCESS");
+                            showProducts();
+                        },
+                        error: function (err) {
+                            alert("Error:" + err.responseText);
+                        }
+                    });
+                }
+            });
+            function clearModalContent() {
+                $("#ProductName").val("");
+                $("#ImagePath").val("");
+                $("#Price").val("");
+                $("#ProductStatus").val("AVAILABLE");
+            }
+        });
+
+        function showProducts() {
+            $(".drink").empty();
+            $(".dinning-offer").empty();
+            $(".bakery").empty();
+
+            $.ajax({
+                url: '/Category/ListProducts/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    var formatprice = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'VND' });
+                    $.each(data, function (i, item) {
+                        var ProductID = item.ProductID;
+                        var ProductName = item.ProductName;
+                        var Price = formatprice.format(item.Price);
+                        var DateAdd = item.DateAdd;
+                        var Status = item.Status;
+                        var ImagePath = item.ImagePath;
+                        var classname = "";
+                        if (item.Type == "drink")
+                            classname = ".drink";
+                        if (item.Type == "dinning offer")
+                            classname = ".dinning-offer";
+                        if (item.Type == "bakery")
+                            classname = ".bakery";
+                        $("#ProductStatus").val(Status);
+                        $("#DateAdd").val(DateAdd);
+                        AppendNewProduct(ProductID, classname, ProductName, Price, ImagePath);
+                        if (Status == "AVAILBLE") {
+                            $(".sold_out").prop('disabled', false);
+                            $(".sold_out").val("Add To Cart");
+                        }
+                        //if (Status == "SOLD OUT"){
+                        //    $(".sold_out").prop('disabled', true);
+                        //    $(".sold_out").val("Sold Out");
+                        //}
+                    });
+                },
+                error: function (err) {
+                    alert("Error:" + err.responseText);
+                }
+            });
+            function AppendNewProduct(ProductID, classname, ProductName, Price, ImagePath) {
+                var rows = ' ';
+                rows += "<div class='col mb-4 Search'>";
+                rows += "<div class='card'>";
+                rows += "<img src='/images/" + ImagePath + "' class='card-img-top' alt='...' />";
+                rows += "<div class='card-body text-center'>";
+                rows += "<h5 class='card-title'>" + ProductName + "</h5>";
+                rows += "<h4 class='card-text' style='color:greenyellow'>" + Price + "</h4>";
+                rows += "<button class='btn btn-primary' type='button' id='btnEdit' data-toggle ='modal' data-target='#CreateEditModal' onclick ='return getDetailProduct(" + ProductID + ")'>Edit</button>";
+                rows += "<button class='btn btn-danger' type='button' id='btnDelete' onclick ='return deleteProduct(" + ProductID + ")'>Delete</button>";
+                rows += "<div class ='text-center'>";
+                rows += "<input class='btn btn-outline-dark sold_out' type='button' onclick ='AddToCart(" + ProductID + ")' value='Add To Cart' style='width: auto' >";
+                rows += "</div>";
+                rows += "</div>";
+                rows += "</div>";
+                rows += "</div>";
+                $(classname).append(rows);
+            }
+        }
+
+        function AddToCart(id) {
+            var formData = {
+                ProductID: id,
+                Status: $("#ProductStatus").val()
+            }
+            $.ajax({
+                url: '/Category/AddToCart/' + id,
+                type: 'POST',
+                dataType: 'json',
+                data: formData,
+                success: function (data) {
+                    if (data.Success) {
+                        $("#cartItem").text("Cart(" + data.Counter + ")");
+                    }
+                    else {
+                        alert("Product is sold out");
+                    }
+                },
+                error: function (err) {
+                    alert("Error:" + err.responseText);
+                }
+            });
+        }
+
+        function deleteProduct(id) {
+            var confirmDelete = confirm("Do you want to delete this product ?");
+            if (confirmDelete) {
+                $.ajax({
+                    url: '/Category/Delete/' + id,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function (data) {
+                        alert("DELETE SUCCESS");
+                        showProducts();
+                    },
+                    error: function (err) {
+                        alert("Error:" + err.responseText);
+                    }
+                });
+            }
+        }
+        function getDetailProduct(id) {
+            isUpdatable = true;
+            currentUpdatePath = "";
+            currentId = 0;
+            $(".disappear").show();
+            $("#title").text("Edit");
+
+            $.ajax({
+                url: '/Category/Get/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $("#ProductName").val(data.ProductName);
+                    $("#Price").val(data.Price);
+                    $("#Category").val(data.Type);
+                    $("#DateAdd").val(data.DateAdd);
+                    $("#ProductStatus").val(data.Status);
+                    $("#ProductID").val(data.ProductID);
+                    currentUpdatePath = data.ImagePath;
+                    currentId = data.ProductID;
+                },
+                error: function (err) {
+                    alert("Error:" + err.responseText);
+                }
+            });
+        }
+    </script>
+}
+
+@section MODEL_DIALOG{
+    <div class="modal fade" id="CreateEditModal" role="dialog">
+        <div class="modal-dialog btn-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><label id="title">No Title</label></h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <input type="hidden" class="form-control" id="ProductID" />
+                                <label>Product Name</label>
+                                <input type="text" id="ProductName" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Price</label>
+                                <input type="text" id="Price" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group disappear">
+                            <div class="col-md-10">
+                                <label>Date Add</label>
+                                <input type="text" id="DateAdd" class="form-control" readonly="readonly" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                @using (Html.BeginForm("Index", "Category", null, FormMethod.Post, new { enctype = "multipart/form-data", id = "UploadForm" }))
+                                {
+                                    <label>Image Path</label>
+                                    <input type="file" name="file" class="form-control-file" id="ImagePath" />
+                                    <input type="submit" id="btnsubmit" class="hidden" />
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group disappear">
+                            <div class="col-md-10">
+                                <label>Status</label>
+                                <select class="form-control" id="ProductStatus">
+                                    <option value="AVAILABLE">AVAILABLE</option>
+                                    <option value="SOLD OUT">SOLD OUT</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Type</label>
+                                <input type="text" id="Category" class="form-control" value="DRINK" readonly="readonly" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnSave" class="btn btn-primary" data-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
